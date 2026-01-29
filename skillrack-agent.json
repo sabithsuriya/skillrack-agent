@@ -1,0 +1,581 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        -400
+      ],
+      "id": "f0ce3f77-1d6f-457d-b9c7-cc2c011bda36",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://127.0.0.1:9101/mcp",
+        "tool": {
+          "__rl": true,
+          "value": "browser_execute_javascript",
+          "mode": "list",
+          "cachedResultName": "browser_execute_javascript"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "code": "(() => {   const text = document.body.innerText || \"\";   return {     text: text   }; })();",
+            "tabId": 988217548
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "tabId",
+              "displayName": "tabId",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "code",
+              "displayName": "code",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "windowId",
+              "displayName": "windowId",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "number",
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        64,
+        -400
+      ],
+      "id": "b17868d9-2224-428d-bd93-df1d12252d74",
+      "name": "MCP Client1",
+      "notes": "Fetch page content"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=this is problem statement form skillrack {{ $json.content[0].text }}. now give correct code to filed as output (dont include comment and unix code )  ......... ",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        288,
+        -400
+      ],
+      "id": "1d2cfbca-7a3e-4276-919a-74018d5cb654",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://127.0.0.1:9101/mcp",
+        "tool": {
+          "__rl": true,
+          "value": "browser_execute_javascript",
+          "mode": "list",
+          "cachedResultName": "browser_execute_javascript"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "code": "=(() => {\n  // n8n injects output safely as a JS string\n  const CODE = {{ JSON.stringify($json.output) }};  \n\n  // Find ACE editor\n  const editorEl = document.querySelector(\".ace_editor\");\n  if (!editorEl) {\n    return { error: \"ACE editor not found\" };\n  }\n\n  const editor = ace.edit(editorEl.id);\n  editor.$blockScrolling = Infinity;\n\n  // Clear editor\n  editor.setValue(\"\", -1);\n\n  // Insert code word-by-word (SkillRack-safe)\n  const parts = CODE.split(\" \");\n  for (let i = 0; i < parts.length; i++) {\n    editor.insert(parts[i] + \" \");\n\n    const row = editor.session.getLength() - 1;\n    const column = editor.session.getLine(row).length;\n    editor.gotoLine(row + 1, column);\n  }\n\n  editor.focus();\n\n  return { status: \"CODE_INJECTED\" };\n})();\n(function () {   const runBtn = document.getElementById(\"j_id_bg\");    if (!runBtn) {     console.log(\"❌ Run button not found\");     return \"RUN_BUTTON_NOT_FOUND\";   }    runBtn.scrollIntoView({ behavior: \"smooth\", block: \"center\" });   runBtn.click();    console.log(\"✅ Run button clicked\");   return \"RUN_CLICKED\"; })();",
+            "tabId": 988217548
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "tabId",
+              "displayName": "tabId",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "code",
+              "displayName": "code",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "windowId",
+              "displayName": "windowId",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "number",
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        864,
+        -400
+      ],
+      "id": "ece725f3-368e-4504-8e88-66d1187e0644",
+      "name": "MCP Client"
+    },
+    {
+      "parameters": {
+        "jsCode": "let output = ($json.output || \"\")\n  .replace(/```[\\s\\S]*?```/g, m => m.replace(/```[a-zA-Z]*\\n?/, \"\").replace(/```/, \"\"))\n  .trim();\n\nreturn [{ output }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        -400
+      ],
+      "id": "1f72a2b0-ba99-4667-a0dd-77a6c7505710",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://127.0.0.1:9101/mcp",
+        "tool": {
+          "__rl": true,
+          "value": "browser_get_page_content",
+          "mode": "list",
+          "cachedResultName": "browser_get_page_content"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "type": "text",
+            "tabId": 988217909
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "tabId",
+              "displayName": "tabId",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "windowId",
+              "displayName": "windowId",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "number",
+              "removed": true
+            },
+            {
+              "id": "type",
+              "displayName": "type",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "text",
+                  "value": "text"
+                },
+                {
+                  "name": "text-with-links",
+                  "value": "text-with-links"
+                }
+              ],
+              "removed": false
+            },
+            {
+              "id": "page",
+              "displayName": "page",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": true
+            },
+            {
+              "id": "contextWindow",
+              "displayName": "contextWindow",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": true
+            },
+            {
+              "id": "options",
+              "displayName": "options",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "object",
+              "defaultValue": "{\n  \"context\": \"visible\",\n  \"includeSections\": [\n    \"main\"\n  ]\n}",
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        1312,
+        -400
+      ],
+      "id": "d1e0531b-8655-430f-a84f-e46b5df8e88d",
+      "name": "MCP Client2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e85558ee-73d8-49f3-8608-83f55cd5df6c",
+              "leftValue": "={{ $json.content[0].text }}",
+              "rightValue": "Code did not pass the execution",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1536,
+        -400
+      ],
+      "id": "b6f12598-361b-43b2-a8ca-51d6bbcb7c9e",
+      "name": "If",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": "nvidia/nemotron-3-nano-30b-a3b:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        1832,
+        -176
+      ],
+      "id": "20388a3c-1125-4a96-84f2-a5068a17bb92",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "CVXyVyO3dGdzGXRN",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.content[0].text }} iam facing error with with this code degub this give final working code that will be accepted by skillrack ",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1760,
+        -400
+      ],
+      "id": "f339d545-a2f8-4885-9ef2-0bbcf4eb3837",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        360,
+        -176
+      ],
+      "id": "db092574-c7c8-416b-a39d-87a281d7e447",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "VbiSvGlKzPMPrO9Y",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let output = ($input.first().json.output|| \"\")\n  .replace(/```[\\s\\S]*?```/g, m => m.replace(/```[a-zA-Z]*\\n?/, \"\").replace(/```/, \"\"))\n  .trim();\n\nreturn [{ output }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2112,
+        -400
+      ],
+      "id": "4076ae11-d7a3-48a5-87ed-6bc44854b313",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1088,
+        -400
+      ],
+      "id": "94de1e90-1f7e-4aec-bbaf-a08282e5dc86",
+      "name": "Wait",
+      "webhookId": "cb6846f6-da71-46d0-9e81-5241883f62cb"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://127.0.0.1:9101/mcp",
+        "tool": {
+          "__rl": true,
+          "value": "browser_execute_javascript",
+          "mode": "list",
+          "cachedResultName": "browser_execute_javascript"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "code": "=(() => {\n  // n8n injects output safely as a JS string\n  const CODE = {{ JSON.stringify($json.output) }};  \n\n  // Find ACE editor\n  const editorEl = document.querySelector(\".ace_editor\");\n  if (!editorEl) {\n    return { error: \"ACE editor not found\" };\n  }\n\n  const editor = ace.edit(editorEl.id);\n  editor.$blockScrolling = Infinity;\n\n  // Clear editor\n  editor.setValue(\"\", -1);\n\n  // Insert code word-by-word (SkillRack-safe)\n  const parts = CODE.split(\" \");\n  for (let i = 0; i < parts.length; i++) {\n    editor.insert(parts[i] + \" \");\n\n    const row = editor.session.getLength() - 1;\n    const column = editor.session.getLine(row).length;\n    editor.gotoLine(row + 1, column);\n  }\n\n  editor.focus();\n\n  return { status: \"CODE_INJECTED\" };\n})();\n(function () {   const runBtn = document.getElementById(\"j_id_bg\");    if (!runBtn) {     console.log(\"❌ Run button not found\");     return \"RUN_BUTTON_NOT_FOUND\";   }    runBtn.scrollIntoView({ behavior: \"smooth\", block: \"center\" });   runBtn.click();    console.log(\"✅ Run button clicked\");   return \"RUN_CLICKED\"; })();",
+            "tabId": 988217548
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "tabId",
+              "displayName": "tabId",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "code",
+              "displayName": "code",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "windowId",
+              "displayName": "windowId",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "number",
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        2336,
+        -400
+      ],
+      "id": "3da8fd5a-3d00-49fd-a48c-4d3b4235b75c",
+      "name": "MCP Client3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "MCP Client1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "MCP Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client2": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "MCP Client3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "MCP Client2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "1425d212-8258-4cc2-9ee8-80e4f1fd356a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4d1c5fa5936fe996ddf90f38862ee0e1d2e9ffdd9728390b6e4fa555f9b38f9f"
+  },
+  "id": "Yi7qxMzED-G8hk9fjHQL6",
+  "tags": []
+}
